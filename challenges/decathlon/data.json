@@ -1,0 +1,228 @@
+{
+  "exercises": {
+    "beginner": {
+      "muscle": [
+        {
+          "name_fr": "Squats muraux",
+          "name_en": "Wall Squats",
+          "description_fr": "Dos contre le mur, descends comme si tu t'asseyais. Maintenir 30 secondes.",
+          "description_en": "Back against the wall, lower yourself as if sitting. Hold 30 seconds.",
+          "reps_fr": "3 séries de 30 secondes",
+          "reps_en": "3 sets of 30 seconds",
+          "funny_tip_fr": "Imagine que ton téléphone est sur la chaise invisible.",
+          "funny_tip_en": "Imagine your phone is on the invisible chair.",
+          "image": "squat.svg",
+          "products": ["yoga_mat", "resistance_band"],
+          "difficulty": 1,
+          "duration": 5
+        },
+        {
+          "name_fr": "Pompes sur les genoux",
+          "name_en": "Knee Push-ups",
+          "description_fr": "Sur les genoux, descends doucement. Ne t'écrase pas!",
+          "description_en": "On your knees, lower slowly. Don't crash!",
+          "reps_fr": "3 séries de 8 répétitions",
+          "reps_en": "3 sets of 8 reps",
+          "funny_tip_fr": "Si tu trembles, c'est normal. C'est ton corps qui pleure.",
+          "funny_tip_en": "If you shake, it's normal. It's your body crying.",
+          "image": "pushup.svg",
+          "products": ["yoga_mat"],
+          "difficulty": 2,
+          "duration": 8
+        }
+      ],
+      "cardio": [
+        {
+          "name_fr": "Marche sur place rapide",
+          "name_en": "Fast March in Place",
+          "description_fr": "Lève bien les genoux! Comme si tu courais après ton dernier neurone.",
+          "description_en": "Lift your knees high! Like running after your last neuron.",
+          "reps_fr": "5 minutes sans s'arrêter",
+          "reps_en": "5 minutes without stopping",
+          "funny_tip_fr": "Essaye de ne pas tomber. C'est plus dur qu'il n'y paraît.",
+          "funny_tip_en": "Try not to fall. It's harder than it looks.",
+          "image": "march.svg",
+          "products": ["running_shoes"],
+          "difficulty": 1,
+          "duration": 5
+        }
+      ],
+      "flexibility": [
+        {
+          "name_fr": "Étirement chat-chameau",
+          "name_en": "Cat-Cow Stretch",
+          "description_fr": "À quatre pattes, alterne dos rond et dos creux. Doucement!",
+          "description_en": "On all fours, alternate rounded back and arched back. Gently!",
+          "reps_fr": "10 répétitions lentes",
+          "reps_en": "10 slow repetitions",
+          "funny_tip_fr": "Essaye de miauler pendant l'exercice pour plus d'authenticité.",
+          "funny_tip_en": "Try to meow during exercise for more authenticity.",
+          "image": "stretch.svg",
+          "products": ["yoga_mat"],
+          "difficulty": 1,
+          "duration": 4
+        }
+      ]
+    },
+    "intermediate": {
+      "muscle": [
+        {
+          "name_fr": "Squats classiques",
+          "name_en": "Classic Squats",
+          "description_fr": "Pieds largeur épaules, descends jusqu'à 90°. Garde le dos droit!",
+          "description_en": "Feet shoulder-width, lower to 90°. Keep back straight!",
+          "reps_fr": "4 séries de 15 répétitions",
+          "reps_en": "4 sets of 15 reps",
+          "funny_tip_fr": "Tes genoux ne doivent pas dépasser tes pieds. Sinon, ils se plaignent.",
+          "funny_tip_en": "Your knees shouldn't pass your toes. Otherwise they complain.",
+          "image": "squat.svg",
+          "products": ["dumbbells", "yoga_mat"],
+          "difficulty": 3,
+          "duration": 10
+        }
+      ]
+    },
+    "advanced": {
+      "muscle": [
+        {
+          "name_fr": "Burpees",
+          "name_en": "Burpees",
+          "description_fr": "La punition ultime. Saute, pompe, saute. Répète jusqu'à la mort.",
+          "description_en": "The ultimate punishment. Jump, push-up, jump. Repeat until death.",
+          "reps_fr": "3 séries de 10 répétitions",
+          "reps_en": "3 sets of 10 reps",
+          "funny_tip_fr": "Si tu survives, tu peux te considérer comme un vrai guerrier.",
+          "funny_tip_en": "If you survive, you can consider yourself a true warrior.",
+          "image": "burpee.svg",
+          "products": ["yoga_mat"],
+          "difficulty": 5,
+          "duration": 15
+        }
+      ]
+    }
+  },
+  "products": {
+    "yoga_mat": {
+      "name_fr": "Tapis de yoga Decathlon",
+      "name_en": "Decathlon Yoga Mat",
+      "description_fr": "Pour amortir tes chutes... de motivation!",
+      "description_en": "To cushion your falls... of motivation!",
+      "price": "19.99€",
+      "link": "https://www.decathlon.fr/p/tapis-de-yoga/_/R-p-309089",
+      "icon": "🧘",
+      "category": "accessories"
+    },
+    "dumbbells": {
+      "name_fr": "Haltères ajustables 2x10kg",
+      "name_en": "Adjustable Dumbbells 2x10kg",
+      "description_fr": "Pour faire semblant d'être fort devant tes amis.",
+      "description_en": "To pretend to be strong in front of your friends.",
+      "price": "49.99€",
+      "link": "https://www.decathlon.fr/p/halteres-ajustables/_/R-p-305752",
+      "icon": "🏋️",
+      "category": "weights"
+    },
+    "resistance_band": {
+      "name_fr": "Bande élastique de résistance",
+      "name_en": "Resistance Band",
+      "description_fr": "Comme la vie, elle résiste à tes efforts. Ne lâche pas!",
+      "description_en": "Like life, it resists your efforts. Don't give up!",
+      "price": "12.99€",
+      "link": "https://www.decathlon.fr/p/bande-elastique/_/R-p-305830",
+      "icon": "🔄",
+      "category": "accessories"
+    },
+    "running_shoes": {
+      "name_fr": "Chaussures de running Kiprun",
+      "name_en": "Kiprun Running Shoes",
+      "description_fr": "Pour courir après tes objectifs... ou le dernier métro.",
+      "description_en": "To run after your goals... or the last subway.",
+      "price": "59.99€",
+      "link": "https://www.decathlon.fr/p/chaussures-running/_/R-p-301241",
+      "icon": "👟",
+      "category": "footwear"
+    },
+    "fitness_tracker": {
+      "name_fr": "Montre connectée fitness",
+      "name_en": "Fitness Smartwatch",
+      "description_fr": "Pour savoir combien de calories tu brûles en cliquant.",
+      "description_en": "To know how many calories you burn by clicking.",
+      "price": "89.99€",
+      "link": "https://www.decathlon.fr/p/montre-connectee-fitness/_/R-p-308452",
+      "icon": "⌚",
+      "category": "electronics"
+    }
+  },
+  "workout_plans": {
+    "5": {
+      "name_fr": "Express - 5 min",
+      "name_en": "Express - 5 min",
+      "description_fr": "Pour les pressés. Mieux que rien!",
+      "description_en": "For busy people. Better than nothing!",
+      "exercises_count": 2,
+      "total_time": 5
+    },
+    "15": {
+      "name_fr": "Standard - 15 min",
+      "name_en": "Standard - 15 min",
+      "description_fr": "Parfait entre deux réunions Zoom.",
+      "description_en": "Perfect between two Zoom meetings.",
+      "exercises_count": 4,
+      "total_time": 15
+    },
+    "30": {
+      "name_fr": "Pro - 30 min",
+      "name_en": "Pro - 30 min",
+      "description_fr": "Pour ceux qui ont fini Netflix.",
+      "description_en": "For those who finished Netflix.",
+      "exercises_count": 6,
+      "total_time": 30
+    },
+    "60": {
+      "name_fr": "Iron Man - 60 min",
+      "name_en": "Iron Man - 60 min",
+      "description_fr": "T'as trop de temps libre ou tu es maso.",
+      "description_en": "You have too much free time or you're a masochist.",
+      "exercises_count": 8,
+      "total_time": 60
+    }
+  },
+  "messages": {
+    "determination_1": {
+      "fr": "Bon, on va y aller doucement...",
+      "en": "Well, we'll take it easy..."
+    },
+    "determination_2": {
+      "fr": "T'es pas convaincu, mais on va essayer!",
+      "en": "You're not convinced, but we'll try!"
+    },
+    "determination_3": {
+      "fr": "Motivation moyenne, résultats moyens!",
+      "en": "Average motivation, average results!"
+    },
+    "determination_4": {
+      "fr": "Là on parle! Prépare-toi à suer!",
+      "en": "Now we're talking! Get ready to sweat!"
+    },
+    "determination_5": {
+      "fr": "Mode guerrier activé! 💥",
+      "en": "Warrior mode activated! 💥"
+    },
+    "injury_none": {
+      "fr": "Écoute ton corps, même s'il ment parfois.",
+      "en": "Listen to your body, even if it lies sometimes."
+    },
+    "injury_back": {
+      "fr": "Garde le dos droit! Comme quand tu fais semblant de travailler.",
+      "en": "Keep your back straight! Like when you pretend to work."
+    },
+    "injury_knee": {
+      "fr": "Évite les sauts. Tes genoux te remercieront.",
+      "en": "Avoid jumps. Your knees will thank you."
+    },
+    "injury_wrist": {
+      "fr": "Échauffe bien tes poignets. Ils ont assez cliqué aujourd'hui.",
+      "en": "Warm up your wrists. They've clicked enough today."
+    }
+  }
+}

@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Jeu NIRD : Caméra Mobile</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #27ae60;
+        font-family: "Segoe UI", sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      #game-container {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      /* UI OVERLAYS */
+      .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 100;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+      }
+      .modal-box {
+        background: #fdfdfd;
+        color: #333;
+        padding: 20px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 95vh;
+        overflow-y: auto;
+        border: 4px solid #2c3e50;
+        text-align: center;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+        position: relative;
+      }
+
+      /* TABLEAU COMPOSANTS */
+      .comp-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        font-size: 0.9em;
+        text-align: left;
+      }
+      .comp-table th {
+        background: #34495e;
+        color: white;
+        padding: 8px;
+      }
+      .comp-table td {
+        border-bottom: 1px solid #ddd;
+        padding: 8px;
+      }
+      .status-ok {
+        color: #27ae60;
+        font-weight: bold;
+      }
+      .status-warn {
+        color: #e67e22;
+        font-weight: bold;
+      }
+      .status-hs {
+        color: #c0392b;
+        font-weight: bold;
+      }
+
+      .pc-title {
+        font-size: 1.2em;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .pc-desc {
+        font-style: italic;
+        color: #7f8c8d;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+      }
+
+      /* GENERAL UI */
+      .jalon-badge {
+        background: #2c3e50;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        margin-top: 15px;
+        background: #2980b9;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn:hover {
+        background: #21618c;
+        transform: translateY(-2px);
+      }
+
+      .guide-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin: 15px 0;
+        text-align: left;
+        font-size: 0.9em;
+      }
+      .guide-item {
+        padding: 5px;
+        background: #f4f4f4;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+
+      .flash-info {
+        background-color: #e8f8f5;
+        border-left: 5px solid #27ae60;
+        padding: 10px;
+        margin-top: 15px;
+        text-align: left;
+        font-size: 0.9em;
+        color: #2c3e50;
+        display: none;
+      }
+
+      #stats-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        font-family: sans-serif;
+        pointer-events: none;
+        text-shadow: 2px 2px 0 #000;
+        font-size: 24px;
+        font-weight: bold;
+        z-index: 50;
+      }
+      #jalon-indicator {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        padding: 8px 20px;
+        border-radius: 20px;
+        pointer-events: none;
+        z-index: 50;
+        border: 1px solid #fff;
+        font-size: 0.8em;
+        white-space: nowrap;
+      }
+      #robot-hint {
+        position: absolute;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        padding: 8px;
+        border-radius: 10px;
+        font-size: 0.9em;
+        display: none;
+        pointer-events: none;
+        border: 1px solid #fff;
+        z-index: 50;
+        width: 80%;
+        text-align: center;
+      }
+
+      .pc-warning {
+        background: #fff3cd;
+        color: #856404;
+        padding: 10px;
+        border: 1px solid #ffeeba;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+        font-weight: bold;
+      }
+
+      /* --- CONTROLES MOBILES --- */
+      #mobile-controls {
+        display: none;
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 90;
+        width: 150px;
+        height: 150px;
+      }
+
+      #action-btn {
+        display: none;
+        position: absolute;
+        bottom: 40px;
+        right: 40px;
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid white;
+        border-radius: 50%;
+        z-index: 90;
+        color: white;
+        font-size: 30px;
+        justify-content: center;
+        align-items: center;
+        touch-action: manipulation;
+      }
+      #action-btn:active {
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .dpad-btn {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid #fff;
+        border-radius: 50%;
+        touch-action: manipulation;
+      }
+      .dpad-btn:active {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .d-up {
+        top: 0;
+        left: 50px;
+      }
+      .d-down {
+        bottom: 0;
+        left: 50px;
+      }
+      .d-left {
+        top: 50px;
+        left: 0;
+      }
+      .d-right {
+        top: 50px;
+        right: 0;
+      }
+
+      /* Affichage uniquement sur les petits écrans */
+      @media (max-width: 1024px) {
+        #mobile-controls,
+        #action-btn {
+          display: flex;
+        }
+        #robot-hint {
+          bottom: 140px;
+        }
+      }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  </head>
+  <body>
+    <div id="game-container"></div>
+    <div id="stats-panel">Score: <span id="ui-score">0</span></div>
+    <div id="jalon-indicator">Jalon 1 : Mobilisation</div>
+    <div id="robot-hint">💡 Cliquez sur le robot ou le bouton 🔍</div>
+
+    <div id="mobile-controls">
+      <div class="dpad-btn d-up" id="btn-up"></div>
+      <div class="dpad-btn d-down" id="btn-down"></div>
+      <div class="dpad-btn d-left" id="btn-left"></div>
+      <div class="dpad-btn d-right" id="btn-right"></div>
+    </div>
+    <div id="action-btn">🔍</div>
+
+    <div id="jalon-overlay" class="overlay" style="display: flex">
+      <div class="modal-box">
+        <span class="jalon-badge" id="j-badge">Jalon 1</span>
+        <h2 id="j-title" style="color: #2980b9; margin-top: 10px">
+          MOBILISATION
+        </h2>
+
+        <div class="pc-warning">
+          ⚠️ Utilisez le clavier OU les boutons tactiles
+        </div>
+
+        <div id="j-desc" style="text-align: left; margin-bottom: 15px">
+          Démarrez la démarche NIRD.
+        </div>
+        <div id="start-guide">
+          <p><b>GUIDE DE TRI :</b></p>
+          <div class="guide-grid">
+            <div class="guide-item">🐧 <b>LINUX</b> : PC Fonctionnel</div>
+            <div class="guide-item">🔧 <b>RÉPARER</b> : PC Cassé</div>
+            <div class="guide-item">♻️ <b>RECYCLER</b> : PC Mort</div>
+            <div class="guide-item">💀 <b>POUBELLE</b> : Interdit</div>
+          </div>
+        </div>
+        <button class="btn" onclick="startGame()">JOUER</button>
+      </div>
+    </div>
+
+    <div id="pc-overlay" class="overlay">
+      <div class="modal-box" style="padding: 15px">
+        <div class="pc-title" id="diag-name">...</div>
+        <div class="pc-desc" id="diag-desc">...</div>
+
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Composant</th>
+              <th>Détail</th>
+              <th>État</th>
+            </tr>
+          </thead>
+          <tbody id="diag-tbody"></tbody>
+        </table>
+
+        <p style="font-size: 0.9em; color: #555">
+          Analysez l'état des composants pour décider !
+        </p>
+        <button class="btn" style="background: #27ae60" onclick="takePC()">
+          J'AI COMPRIS
+        </button>
+      </div>
+    </div>
+
+    <div id="result-overlay" class="overlay">
+      <div class="modal-box">
+        <h2 id="res-title">BRAVO !</h2>
+        <h3 id="res-score">+1 Point</h3>
+        <p id="res-msg">...</p>
+        <div id="flash-info-box" class="flash-info">
+          <span style="font-weight: bold">💡 LE SAVIEZ-VOUS ?</span><br /><span
+            id="flash-text"
+            >...</span
+          >
+        </div>
+        <button class="btn" onclick="closeResult()">CONTINUER</button>
+      </div>
+    </div>
+
+    <script>
+      // --- CONFIGURATION ---
+      const config = {
+        type: Phaser.AUTO,
+        parent: "game-container",
+        scale: {
+          mode: Phaser.Scale.RESIZE,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
+        physics: { default: "arcade", arcade: { debug: false } },
+        scene: { preload: preload, create: create, update: update },
+      };
+      const game = new Phaser.Game(config);
+
+      let player, cursors;
+      let score = 0;
+      let pcIndicator, pcSprite, buildings;
+      let isPaused = true;
+      let carriedPC = null;
+      let currentJalon = 1;
+
+      // Gestion Touch
+      let touchState = { up: false, down: false, left: false, right: false };
+
+      // --- MONDE VIRTUEL (Pour que la caméra puisse bouger) ---
+      const WORLD_W = 1600;
+      const WORLD_H = 1200;
+
+      // --- BASE DE DONNÉES DES PC ---
+      const PC_DATA = [
+        // FONCTIONNEL (LINUX)
+        {
+          type: "functional",
+          name: "Dell Optiplex",
+          desc: "PC de bureau lent sous Windows 10.",
+          comps: [
+            { name: "CPU", val: "Intel i3", state: "OK", class: "status-ok" },
+            { name: "RAM", val: "4 Go", state: "OK", class: "status-ok" },
+            {
+              name: "Disque",
+              val: "HDD 500Go",
+              state: "Lent",
+              class: "status-warn",
+            },
+            {
+              name: "Carte Mère",
+              val: "Standard",
+              state: "OK",
+              class: "status-ok",
+            },
+          ],
+          ok: "Bravo ! Avec Linux et un SSD, il est parfait.",
+          bad: "Dommage. Il fonctionne, ne le jetez pas.",
+        },
+        {
+          type: "functional",
+          name: "HP ProBook",
+          desc: "Ventile beaucoup, système instable.",
+          comps: [
+            { name: "CPU", val: "AMD A4", state: "OK", class: "status-ok" },
+            {
+              name: "Ventilateur",
+              val: "Encrasé",
+              state: "Bruyant",
+              class: "status-warn",
+            },
+            {
+              name: "Disque",
+              val: "SSD 120Go",
+              state: "OK",
+              class: "status-ok",
+            },
+            {
+              name: "OS",
+              val: "Windows",
+              state: "Virus",
+              class: "status-warn",
+            },
+          ],
+          ok: "Bien vu ! Un nettoyage et une réinstall suffisent.",
+          bad: "Erreur. Pas de panne matérielle majeure.",
+        },
+        // RÉPARATION
+        {
+          type: "recondition",
+          name: "Tour Gamer",
+          desc: "Ne démarre pas quand on appuie sur le bouton.",
+          comps: [
+            { name: "CPU", val: "Ryzen 5", state: "OK", class: "status-ok" },
+            { name: "GPU", val: "GTX 1060", state: "OK", class: "status-ok" },
+            { name: "Alim", val: "500W", state: "HS", class: "status-hs" },
+            { name: "Carte Mère", val: "ATX", state: "OK", class: "status-ok" },
+          ],
+          ok: "Super ! On change l'alimentation et on sauve une bête de course.",
+          bad: "Gâchis ! C'était juste l'alim.",
+        },
+        {
+          type: "recondition",
+          name: "Lenovo ThinkPad",
+          desc: "L'écran reste noir, mais le PC tourne.",
+          comps: [
+            { name: "CPU", val: "Intel i5", state: "OK", class: "status-ok" },
+            {
+              name: "Écran",
+              val: 'LCD 15"',
+              state: "Fissuré/HS",
+              class: "status-hs",
+            },
+            { name: "Clavier", val: "AZERTY", state: "OK", class: "status-ok" },
+            {
+              name: "Sortie HDMI",
+              val: "Vidéo",
+              state: "Fonctionne",
+              class: "status-ok",
+            },
+          ],
+          ok: "Exact ! Changement de dalle ou usage en fixe.",
+          bad: "Faux. La carte mère est bonne.",
+        },
+        // RECYCLAGE
+        {
+          type: "dead",
+          name: "Vieux PC (1998)",
+          desc: "Odeur de brûlé au démarrage.",
+          comps: [
+            {
+              name: "CPU",
+              val: "Pentium III",
+              state: "Obsolète",
+              class: "status-hs",
+            },
+            {
+              name: "Carte Mère",
+              val: "Vintage",
+              state: "Condensateurs HS",
+              class: "status-hs",
+            },
+            { name: "Alim", val: "200W", state: "Grillée", class: "status-hs" },
+            {
+              name: "Boitier",
+              val: "Jauni",
+              state: "Mauvais",
+              class: "status-warn",
+            },
+          ],
+          ok: "Correct. Trop vieux et dangereux -> Recyclage.",
+          bad: "Impossible à réparer. Danger électrique.",
+        },
+        {
+          type: "dead",
+          name: "Sony Vaio",
+          desc: "Tombé dans la mer.",
+          comps: [
+            { name: "CPU", val: "Inconnu", state: "Oxydé", class: "status-hs" },
+            {
+              name: "Batterie",
+              val: "Li-Po",
+              state: "Gonflée",
+              class: "status-hs",
+            },
+            { name: "Écran", val: "Tactile", state: "HS", class: "status-hs" },
+            {
+              name: "Carte Mère",
+              val: "PCB",
+              state: "Rouille",
+              class: "status-hs",
+            },
+          ],
+          ok: "Bon choix. L'eau a tout détruit.",
+          bad: "Non, c'est irrécupérable.",
+        },
+      ];
+      const FACTS = [
+        "Reconditionner = 50kg de CO2 évités.",
+        "PrimTux prolonge la vie des PC de 5 ans.",
+        "80% de l'impact vient de la fabrication.",
+        "Recycler permet de récupérer de l'or.",
+      ];
+
+      // --- LOGIQUE TACTILE ---
+      function setupTouchControls() {
+        const bindBtn = (id, dir) => {
+          const btn = document.getElementById(id);
+          btn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            touchState[dir] = true;
+          });
+          btn.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            touchState[dir] = false;
+          });
+          btn.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            touchState[dir] = true;
+          });
+          btn.addEventListener("mouseup", (e) => {
+            e.preventDefault();
+            touchState[dir] = false;
+          });
+        };
+        bindBtn("btn-up", "up");
+        bindBtn("btn-down", "down");
+        bindBtn("btn-left", "left");
+        bindBtn("btn-right", "right");
+
+        const actBtn = document.getElementById("action-btn");
+        const doAction = (e) => {
+          e.preventDefault();
+          if (carriedPC && !isPaused) showDiagnostic();
+        };
+        actBtn.addEventListener("touchstart", doAction);
+        actBtn.addEventListener("click", doAction);
+      }
+      setupTouchControls();
+
+      // --- JEU PRINCIPAL ---
+
+      function preload() {}
+
+      function create() {
+        // 1. DÉFINIR LE MONDE (Plus grand que l'écran)
+        this.physics.world.setBounds(0, 0, WORLD_W, WORLD_H);
+        this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
+
+        // 2. CARTE ET DÉCORS
+        createInternalGraphics(this);
+        drawPrettyMap(this);
+
+        // 3. BÂTIMENTS (Placés sur la grande carte)
+        buildings = this.physics.add.staticGroup();
+        createBuilding(this, 200, 200, 0x3498db, "INSTALLER LINUX");
+        createBuilding(this, 1400, 200, 0xe67e22, "RÉPARER");
+        createBuilding(this, 200, 1000, 0x9b59b6, "RECYCLER");
+        createBuilding(this, 1400, 1000, 0x7f8c8d, "POUBELLE");
+
+        // 4. JOUEUR (Au centre du monde)
+        player = this.physics.add
+          .sprite(WORLD_W / 2, WORLD_H / 2, "robot_idle")
+          .setScale(1);
+        player.setCollideWorldBounds(true);
+        player.setInteractive();
+        player.on("pointerdown", () => {
+          if (carriedPC && !isPaused) showDiagnostic();
+        });
+
+        // 5. CAMÉRA SUIT LE JOUEUR
+        this.cameras.main.startFollow(player, true, 0.08, 0.08);
+
+        // 6. INTERFACE
+        pcIndicator = this.add
+          .text(0, 0, "", {
+            fontSize: "14px",
+            fontStyle: "bold",
+            color: "#fff",
+            stroke: "#000",
+            strokeThickness: 3,
+          })
+          .setOrigin(0.5)
+          .setVisible(false)
+          .setDepth(20);
+        cursors = this.input.keyboard.createCursorKeys();
+
+        // 7. SPAWN DU PREMIER PC (avec correction du bug)
+        spawnPC(this);
+        this.physics.add.overlap(player, buildings, handleDrop, null, this);
+      }
+
+      function update() {
+        if (isPaused) {
+          if (player.body) player.body.setVelocity(0);
+          return;
+        }
+
+        const speed = 300; // Un peu plus rapide car la carte est grande
+        player.setVelocity(0);
+        let move = false;
+
+        // Contrôle Clavier OU Tactile
+        if (cursors.left.isDown || touchState.left) {
+          player.body.setVelocityX(-speed);
+          player.flipX = true;
+          move = true;
+        } else if (cursors.right.isDown || touchState.right) {
+          player.body.setVelocityX(speed);
+          player.flipX = false;
+          move = true;
+        }
+
+        if (cursors.up.isDown || touchState.up) {
+          player.body.setVelocityY(-speed);
+          move = true;
+        } else if (cursors.down.isDown || touchState.down) {
+          player.body.setVelocityY(speed);
+          move = true;
+        }
+
+        if (move) player.anims.play("walk", true);
+        else {
+          player.anims.stop();
+          player.setTexture("robot_idle");
+        }
+
+        if (carriedPC) pcIndicator.setPosition(player.x, player.y - 45);
+      }
+
+      // --- LOGIQUE JEU ---
+
+      function handleDrop(player, building) {
+        if (!carriedPC) return;
+
+        let name = building.body.logicName;
+        let type = carriedPC.type;
+        let success = false;
+        let msg = "";
+
+        // MODIFICATION ICI : Remplacement de l'alerte par l'overlay
+        if (name === "POUBELLE") {
+          finishAction(0, "🚫 Non, jamais la poubelle ! Il vaut mieux essayer de lui donner une seconde vie ou de le recycler.");
+          return;
+        }
+
+        if (name === "INSTALLER LINUX" && type === "functional") success = true;
+        else if (name === "RÉPARER" && type === "recondition") success = true;
+        else if (name === "RECYCLER" && type === "dead") success = true;
+        else msg = "Mauvaise destination !";
+
+        if (success) {
+          finishAction(1, carriedPC.ok);
+        } else {
+          let penalty = score >= 20 ? -1 : 0;
+          finishAction(penalty, msg + (penalty < 0 ? " (-1 Pt)" : ""));
+        }
+      }
+
+      function finishAction(pts, msg) {
+        score += pts;
+        if (score < 0) score = 0;
+        document.getElementById("ui-score").innerText = score;
+        carriedPC = null;
+        pcIndicator.setVisible(false);
+
+        document.getElementById("res-title").innerText =
+          pts > 0 ? "BRAVO" : "OUPS";
+        document.getElementById("res-title").style.color =
+          pts > 0 ? "#27ae60" : "#c0392b";
+        document.getElementById("res-score").innerText =
+          (pts > 0 ? "+" : "") + pts;
+        document.getElementById("res-msg").innerText = msg;
+
+        const box = document.getElementById("flash-info-box");
+        if (pts > 0) {
+          box.style.display = "block";
+          document.getElementById("flash-text").innerText =
+            FACTS[Math.floor(Math.random() * FACTS.length)];
+        } else {
+          box.style.display = "none";
+        }
+
+        document.getElementById("result-overlay").style.display = "flex";
+        isPaused = true;
+
+        if (score === 5) setTimeout(() => showJalon(2), 100);
+        else if (score === 10) setTimeout(() => showJalon(3), 100);
+        else if (score === 15) setTimeout(() => showJalon(4), 100);
+      }
+
+      // --- UI ---
+
+      function startGame() {
+        document.getElementById("jalon-overlay").style.display = "none";
+        isPaused = false;
+      }
+
+      function showJalon(n) {
+        let t = "",
+          d = "";
+        if (n === 2) {
+          t = "Jalon 2";
+          d = "On passe à l'expérimentation ! (Linux)";
+        }
+        if (n === 3) {
+          t = "Jalon 3";
+          d = "Intégration et Pérennité.";
+        }
+        if (n === 4) {
+          t = "MODE INFINI";
+          d = "Bravo ! Mode Expert activé (-1 pt erreur).";
+        }
+        document.getElementById("j-badge").innerText = t;
+        document.getElementById("j-title").innerText = t;
+        document.getElementById("j-desc").innerText = d;
+        document.getElementById("jalon-overlay").style.display = "flex";
+        isPaused = true;
+      }
+
+      function closeResult() {
+        document.getElementById("result-overlay").style.display = "none";
+        isPaused = false;
+        spawnPC(game.scene.scenes[0]);
+      }
+
+      function showDiagnostic() {
+        document.getElementById("diag-name").innerText = carriedPC.name;
+        document.getElementById("diag-desc").innerText = carriedPC.desc;
+
+        const tbody = document.getElementById("diag-tbody");
+        tbody.innerHTML = "";
+
+        carriedPC.comps.forEach((c) => {
+          let tr = document.createElement("tr");
+          tr.innerHTML = `<td><b>${c.name}</b></td><td>${c.val}</td><td class="${c.class}">${c.state}</td>`;
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById("pc-overlay").style.display = "flex";
+        isPaused = true;
+      }
+
+      function takePC() {
+        document.getElementById("pc-overlay").style.display = "none";
+        isPaused = false;
+        if (pcSprite) {
+          pcSprite.destroy();
+          pcSprite = null;
+        }
+        pcIndicator.setText("PC: " + carriedPC.name).setVisible(true);
+        document.getElementById("robot-hint").style.display = "block";
+      }
+
+      // --- FONCTION DE SPAWN SÉCURISÉE ---
+      function spawnPC(scene) {
+        if (pcSprite) pcSprite.destroy();
+        
+        let validPosition = false;
+        let x, y;
+        let safetyRadius = 140; // Distance min
+        
+        // Tentative de placement valide (boucle sécurisée)
+        let attempts = 0;
+        // On récupère la liste des bâtiments sous forme de tableau
+        let buildingArray = buildings.getChildren();
+
+        while (!validPosition && attempts < 100) {
+            x = Phaser.Math.Between(100, WORLD_W - 100);
+            y = Phaser.Math.Between(100, WORLD_H - 100);
+            
+            let collisionFound = false;
+            
+            // On vérifie la distance avec CHAQUE bâtiment
+            for (let i = 0; i < buildingArray.length; i++) {
+                let b = buildingArray[i];
+                // Si la distance est trop courte, position invalide
+                if (Phaser.Math.Distance.Between(x, y, b.x, b.y) < safetyRadius) {
+                    collisionFound = true;
+                    break;
+                }
+            }
+            
+            if (!collisionFound) {
+                validPosition = true;
+            }
+            attempts++;
+        }
+        
+        // Création du sprite à la position trouvée (ou la dernière testée si échec)
+        pcSprite = scene.physics.add.sprite(x, y, "pc_item");
+        
+        scene.physics.add.overlap(
+          player,
+          pcSprite,
+          () => {
+            if (!carriedPC) {
+              carriedPC = PC_DATA[Math.floor(Math.random() * PC_DATA.length)];
+              pcSprite.destroy();
+              pcSprite = null;
+              showDiagnostic();
+            }
+          },
+          null,
+          scene
+        );
+      }
+
+      // --- GRAPHISMES DESSINÉS ---
+
+      function createInternalGraphics(scene) {
+        let g = scene.make.graphics({ x: 0, y: 0, add: false });
+
+        // ROBOT
+        const draw = (f) => {
+          g.clear();
+          g.lineStyle(2, 0x000000);
+          g.fillStyle(0xdddddd); // Jambes
+          let off = f === 1 ? 3 : f === 2 ? -3 : 0;
+          g.fillRect(12, 45 + off, 8, 10);
+          g.strokeRect(12, 45 + off, 8, 10);
+          g.fillRect(30, 45 - off, 8, 10);
+          g.strokeRect(30, 45 - off, 8, 10);
+          g.fillStyle(0xcccccc); // Corps
+          g.fillRect(10, 25, 30, 20);
+          g.strokeRect(10, 25, 30, 20);
+          g.fillStyle(0xffffff); // Tête
+          g.fillRect(0, 0, 50, 35);
+          g.strokeRect(0, 0, 50, 35);
+          g.fillStyle(0x000000); // Yeux
+          g.fillRect(12, 10, 5, 8);
+          g.fillRect(33, 10, 5, 8);
+          g.fillStyle(0xffaaaa); // Joues
+          g.fillRect(8, 20, 4, 4);
+          g.fillRect(38, 20, 4, 4);
+        };
+        draw(0);
+        g.generateTexture("robot_idle", 50, 60);
+        draw(1);
+        g.generateTexture("robot_walk1", 50, 60);
+        draw(2);
+        g.generateTexture("robot_walk2", 50, 60);
+        scene.anims.create({
+          key: "walk",
+          frames: [{ key: "robot_walk1" }, { key: "robot_walk2" }],
+          frameRate: 8,
+          repeat: -1,
+        });
+
+        // PC
+        g.clear();
+        g.lineStyle(2, 0x000000);
+        g.fillStyle(0xbdc3c7);
+        g.fillRect(30, 0, 15, 40);
+        g.strokeRect(30, 0, 15, 40);
+        g.fillStyle(0x333);
+        g.fillCircle(37, 5, 2);
+        g.fillStyle(0xecf0f1);
+        g.fillRect(0, 5, 28, 22);
+        g.strokeRect(0, 5, 28, 22);
+        g.fillStyle(0x3498db);
+        g.fillRect(2, 7, 24, 18);
+        g.fillStyle(0x7f8c8d);
+        g.fillRect(2, 30, 24, 8);
+        g.strokeRect(2, 30, 24, 8);
+        g.generateTexture("pc_item", 50, 45);
+      }
+
+      function drawPrettyMap(scene) {
+        let g = scene.add.graphics();
+        g.fillStyle(0x27ae60);
+        g.fillRect(0, 0, WORLD_W, WORLD_H);
+        for (let i = 0; i < 80; i++) {
+          let tx = Phaser.Math.Between(20, WORLD_W - 20);
+          let ty = Phaser.Math.Between(20, WORLD_H - 20);
+          g.fillStyle(0x5d4037);
+          g.fillRect(tx - 3, ty + 10, 6, 12);
+          g.fillStyle(0x1e8449);
+          g.fillCircle(tx, ty, 18);
+        }
+        // Chemins
+        g.lineStyle(40, 0x1e8449, 0.5);
+        g.strokeRect(150, 150, WORLD_W - 300, WORLD_H - 300);
+      }
+
+      function createBuilding(scene, x, y, color, name) {
+        scene.add.rectangle(x + 5, y + 5, 120, 120, 0x000000, 0.4); // Ombre
+        let b = scene.add.rectangle(x, y, 120, 120, color);
+        b.setStrokeStyle(4, 0xffffff);
+        scene.physics.add.existing(b, true);
+        buildings.add(b);
+        b.body.logicName = name;
+        let labelBg = scene.add.rectangle(
+          x,
+          y - 80,
+          name.length * 12,
+          30,
+          0x222222
+        );
+        scene.add
+          .text(x, y - 80, name, {
+            fontSize: "20px",
+            align: "center",
+            color: "#fff",
+            fontStyle: "bold",
+          })
+          .setOrigin(0.5);
+      }
+    </script>
+  </body>
+</html>

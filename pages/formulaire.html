@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sopra Steria - Ultimate Bad UI 2025</title>
+    <style>
+        /* Configuration globale : Style Hacker/Terminal */
+        body {
+            background-color: #0d0d0d;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            cursor: none; /* Masque le curseur natif du système */
+            user-select: none;
+        }
+
+        /* Curseur personnalisé inversé */
+        #fake-cursor {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="1"><path d="M12 2L2 22l10-4 10 4z"/></svg>');
+            pointer-events: none; /* Permet de cliquer à travers l'image */
+            z-index: 9999;
+            transform: rotate(180deg);
+            filter: drop-shadow(0 0 5px #00ff00);
+            transition: transform 0.3s;
+        }
+
+        #container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 20px;
+            border: 2px solid #00ff00;
+            background-color: rgba(0, 20, 0, 0.9);
+            box-shadow: 0 0 15px #00ff00;
+            max-width: 400px;
+        }
+
+        h2 { margin: 0 0 15px 0; font-size: 18px; text-transform: uppercase; }
+
+        input {
+            background: #000;
+            color: #00ff00;
+            border: 1px dashed #00ff00;
+            padding: 10px;
+            font-size: 1.5em;
+            font-family: inherit;
+            width: 100%;
+            text-align: center;
+            letter-spacing: 5px;
+        }
+
+        small { display: block; margin-top: 10px; color: #aaa; font-size: 0.8em; }
+
+        #mode-info {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #004400;
+            color: #ff00de;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        /* Bouton cible avec animation fluide */
+        #target-btn {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff00de 0%, #6100ff 100%);
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px #ff00de;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.3s; 
+            user-select: none;
+            cursor: none;
+            z-index: 10;
+        }
+
+        /* Indicateur d'orientation (point blanc) */
+        #target-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 0 5px black;
+        }
+
+        .disabled-btn {
+            opacity: 0.3;
+            filter: grayscale(100%);
+            box-shadow: none !important;
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            text-align: right;
+            opacity: 0.7;
+            font-size: 0.8em;
+            color: #ff00de;
+        }
+
+        /* --- POPUP AVERTISSEMENT (Caché par défaut) --- */
+        #startup-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #000;
+            color: #ff0000;
+            z-index: 20000; /* Au-dessus de tout */
+            display: none; /* On l'affiche via JS seulement si mobile */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            border: 10px solid #ff0000;
+            box-sizing: border-box;
+        }
+
+        #startup-overlay h1 {
+            font-size: 2.5em;
+            text-shadow: 0 0 10px #ff0000;
+            animation: blink 1s infinite;
+            padding: 0 20px;
+        }
+
+        #startup-overlay p {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            color: #fff;
+            padding: 0 20px;
+        }
+
+        /* Le bouton qui disparaîtra sur mobile */
+        #start-btn {
+            padding: 20px 40px;
+            font-size: 1.5em;
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            cursor: pointer;
+            font-family: inherit;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="startup-overlay">
+        <h1>⚠ ACCÈS REFUSÉ ⚠</h1>
+        <p id="overlay-msg">ORDINATEUR REQUIS.<br><br>Ce défi n'est pas conçu pour les écrans tactiles.</p>
+        <button id="start-btn" onclick="closeOverlay()">J'AI COMPRIS</button>
+    </div>
+
+    <div id="fake-cursor"></div>
+
+    <div id="container">
+        <h2>Entrez votre N° de Téléphone :</h2>
+        <input type="text" id="result" readonly placeholder="0X XX XX XX XX">
+        <small id="status-text">État : Initialisation...</small>
+        
+        <div id="mode-info">
+            SOURIS : <span id="mouse-mode">INVERSÉE</span><br>
+            CLIC REQUIS : <span id="click-mode">GAUCHE</span>
+        </div>
+    </div>
+
+    <div id="target-btn">0</div>
+
+    <div class="instruction">Défi Nuit de l'Info 2025<br>Système Instable v9.0</div>
+
+    <script>
+        const fakeCursor = document.getElementById('fake-cursor');
+        const targetBtn = document.getElementById('target-btn');
+        const resultInput = document.getElementById('result');
+        const statusText = document.getElementById('status-text');
+        const mouseModeSpan = document.getElementById('mouse-mode');
+        const clickModeSpan = document.getElementById('click-mode');
+        
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        const startTime = Date.now();
+        
+        let teleportTimeout = null;
+        let hasClickedThisRound = false; 
+        let currentRotation = 0; 
+        let isMouseInverted = true; 
+        let isClickRight = false;   
+
+        // --- DÉTECTION MOBILE ET BLOCAGE ---
+        function checkDeviceAndBlock() {
+            const overlay = document.getElementById('startup-overlay');
+            const startBtn = document.getElementById('start-btn');
+            const msg = document.getElementById('overlay-msg');
+
+            // Détection basique : Largeur < 1024px OU présence de tactile
+            const isMobile = window.innerWidth < 1024 || navigator.maxTouchPoints > 0;
+
+            if (isMobile) {
+                // 1. AFFICHER LE POPUP
+                overlay.style.display = 'flex';
+                
+                // 2. SUPPRIMER LE BOUTON (Impossible de fermer)
+                if(startBtn) startBtn.remove();
+                
+                // 3. Update message pour troller
+                msg.innerHTML = "UTILISEZ UN ORDINATEUR.<br><br>Vous êtes bloqué ici.<br>Revenez avec une souris et un clavier.";
+            } else {
+                // Sur PC, on laisse jouer directement
+                overlay.style.display = 'none';
+                initGame();
+            }
+        }
+
+        // --- Fermeture du Popup (Uniquement accessible si le bouton existe) ---
+        function closeOverlay() {
+            document.getElementById('startup-overlay').style.display = 'none';
+            initGame();
+        }
+
+        // --- Initialisation du Jeu ---
+        function initGame() {
+            scheduleNextTeleport();
+            cycleMouseMode();
+            cycleClickMode();
+            
+            // Placement initial
+            const margin = 100;
+            targetBtn.style.left = (Math.random() * (width - 200) + 100) + "px";
+            targetBtn.style.top = (Math.random() * (height - 200) + 100) + "px";
+        }
+
+        // --- Logique de Téléportation ---
+        function scheduleNextTeleport() {
+            if (teleportTimeout) clearTimeout(teleportTimeout);
+            const randomDelay = Math.floor(Math.random() * 19000) + 1000;
+            teleportTimeout = setTimeout(teleportButton, randomDelay);
+        }
+
+        function teleportButton() {
+            hasClickedThisRound = false;
+            targetBtn.classList.remove('disabled-btn');
+
+            const margin = 100; 
+            const newX = Math.random() * (width - margin * 2) + margin;
+            const newY = Math.random() * (height - margin * 2) + margin;
+            targetBtn.style.left = newX + "px";
+            targetBtn.style.top = newY + "px";
+
+            targetBtn.innerText = Math.floor(Math.random() * 10);
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+            targetBtn.style.background = `radial-gradient(circle, ${randomColor} 0%, #000 100%)`;
+            currentRotation = Math.floor(Math.random() * 360);
+            targetBtn.style.transform = `rotate(${currentRotation}deg) scale(1)`;
+
+            scheduleNextTeleport();
+        }
+
+        // --- Cycles de Difficulté ---
+        function cycleMouseMode() {
+            const delay = Math.random() * 20000 + 20000;
+            setTimeout(() => {
+                isMouseInverted = !isMouseInverted;
+                mouseModeSpan.innerText = isMouseInverted ? "INVERSÉE" : "NORMALE";
+                mouseModeSpan.style.color = isMouseInverted ? "red" : "#00ff00";
+                fakeCursor.style.transform = isMouseInverted ? "rotate(180deg)" : "rotate(0deg)";
+                cycleMouseMode();
+            }, delay);
+        }
+
+        function cycleClickMode() {
+            const delay = Math.random() * 20000 + 20000;
+            setTimeout(() => {
+                isClickRight = !isClickRight;
+                clickModeSpan.innerText = isClickRight ? "DROIT (CLIC DROIT)" : "GAUCHE (CLIC NORMAL)";
+                clickModeSpan.style.color = isClickRight ? "yellow" : "#00ff00";
+                cycleClickMode();
+            }, delay);
+        }
+
+        // --- Gestion du curseur ---
+        document.addEventListener('mousemove', (e) => {
+            let finalX, finalY;
+            if (isMouseInverted) {
+                finalX = width - e.clientX;
+                finalY = height - e.clientY;
+            } else {
+                finalX = e.clientX;
+                finalY = e.clientY;
+            }
+            fakeCursor.style.left = finalX + 'px';
+            fakeCursor.style.top = finalY + 'px';
+            checkCollision(finalX, finalY);
+        });
+
+        function checkCollision(cursorX, cursorY) {
+            if (hasClickedThisRound) {
+                targetBtn.style.transform = `rotate(${currentRotation}deg) scale(1)`;
+                statusText.innerText = "Attente rechargement...";
+                statusText.style.color = "gray";
+                return;
+            }
+            const rect = targetBtn.getBoundingClientRect();
+            const btnCX = rect.left + rect.width / 2;
+            const btnCY = rect.top + rect.height / 2;
+            const dist = Math.hypot(cursorX - btnCX, cursorY - btnCY);
+
+            if (dist < 50) {
+                targetBtn.style.transform = `rotate(${currentRotation}deg) scale(1.3)`;
+                if (dist < 40 && Math.random() > 0.7) { 
+                    statusText.innerText = "Cible instable !";
+                    statusText.style.color = "red";
+                    teleportButton(); 
+                } else {
+                    statusText.innerText = "Cible verrouillée";
+                    statusText.style.color = "#fff";
+                }
+            } else {
+                targetBtn.style.transform = `rotate(${currentRotation}deg) scale(1)`;
+                statusText.innerText = "Recherche cible...";
+                statusText.style.color = "#00ff00";
+            }
+        }
+
+        // --- Clics ---
+        document.addEventListener('click', (e) => {
+            if(e.target.id === 'start-btn') return;
+            if (isClickRight) return; 
+            attemptClick();
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); 
+            if (!isClickRight) return; 
+            attemptClick();
+        });
+
+        function attemptClick() {
+            if (hasClickedThisRound) return;
+            const cursorRect = fakeCursor.getBoundingClientRect();
+            const cX = cursorRect.left;
+            const cY = cursorRect.top;
+            const btnRect = targetBtn.getBoundingClientRect();
+
+            if (cX >= btnRect.left - 20 && cX <= btnRect.right + 20 &&
+                cY >= btnRect.top - 20 && cY <= btnRect.bottom + 20) {
+                successAction();
+            }
+        }
+
+        function successAction() {
+            resultInput.value += targetBtn.innerText;
+            hasClickedThisRound = true;
+            targetBtn.classList.add('disabled-btn'); 
+            targetBtn.style.transform = `rotate(${currentRotation}deg) scale(1)`;
+            document.body.style.backgroundColor = '#222';
+            setTimeout(() => document.body.style.backgroundColor = '#0d0d0d', 100);
+
+            if (resultInput.value.length >= 10) {
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                const seconds = Math.floor((duration / 1000) % 60);
+                const minutes = Math.floor((duration / (1000 * 60)) % 60);
+                setTimeout(() => {
+                    alert(`FIN DE SESSION.\n\nTemps perdu : ${minutes} min ${seconds} sec.\nScore d'adaptation : 0/10.`);
+                    location.reload();
+                }, 200);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            // On revérifie au resize au cas où l'utilisateur passe du mode desktop au mode mobile (devtools)
+            checkDeviceAndBlock();
+        });
+
+        // Lancement de la vérification au chargement
+        checkDeviceAndBlock();
+
+    </script>
+</body>
+</html>

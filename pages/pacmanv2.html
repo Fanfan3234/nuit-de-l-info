@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Linux vs Windows (Responsive)</title>
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Changé pour éviter les soucis de hauteur sur mobile */
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 20px;
+            overflow-x: hidden; /* Empêche le scroll horizontal */
+            touch-action: manipulation; /* Améliore la réponse tactile */
+        }
+
+        h1 {
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #FFFF00;
+            text-shadow: 0 0 10px #FFFF00;
+            font-size: 1.5rem; /* Taille adaptative */
+            text-align: center;
+        }
+
+        /* Styles pour les boutons de difficulté */
+        .controls-container {
+            margin-bottom: 15px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-difficulty {
+            background-color: #333;
+            color: white;
+            border: 2px solid #555;
+            padding: 8px 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .btn-difficulty:hover {
+            background-color: #555;
+            border-color: #777;
+        }
+
+        .btn-difficulty.active {
+            background-color: #FFFF00;
+            color: black;
+            border-color: #FFFF00;
+            box-shadow: 0 0 10px #FFFF00;
+        }
+
+        /* --- RESPONSIVE GAME CONTAINER --- */
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            border: 4px solid #333;
+            border-radius: 4px;
+            
+            /* C'est ici que la magie opère pour le redimensionnement */
+            width: 480px; /* Largeur native du jeu (15 * 32) */
+            max-width: 95vw; /* Ne dépasse jamais 95% de la largeur de l'écran */
+            aspect-ratio: 1 / 1; /* Garde le jeu carré pour ne pas écraser Tux */
+            height: auto; 
+        }
+
+        canvas {
+            display: block;
+            background-color: #111;
+            width: 100%; /* Le canvas remplit le conteneur */
+            height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .score-box {
+            color: #00FF00;
+            text-shadow: 0 0 5px #00FF00;
+        }
+
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: red;
+            font-size: clamp(20px, 5vw, 30px); /* Texte qui s'adapte */
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+            display: none;
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border: 2px solid white;
+            width: 80%;
+        }
+
+        .controls-hint {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        /* --- CONTROLES MOBILES (PAD DIRECTIONNEL) --- */
+        .mobile-controls {
+            display: none; /* Caché par défaut sur PC */
+            margin-top: 20px;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            user-select: none; /* Empêche la sélection de texte */
+        }
+
+        .d-pad-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .pad-btn {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #555;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            touch-action: manipulation; /* Très important pour la réactivité tactile */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .pad-btn:active {
+            background-color: rgba(255, 255, 0, 0.3);
+            border-color: #FFFF00;
+            transform: scale(0.95);
+        }
+
+        /* MEDIA QUERY : Affiche les contrôles tactiles sur les écrans < 768px */
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+            .controls-hint {
+                display: none; /* On cache le texte "Utilisez les flèches" sur mobile */
+            }
+            body {
+                padding-bottom: 50px; /* Espace pour scroller */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Linux vs Windows</h1>
+
+    <div class="controls-container">
+        <button id="btn-easy" class="btn-difficulty active" onclick="setDifficulty(1)">Facile</button>
+        <button id="btn-hard" class="btn-difficulty" onclick="setDifficulty(2)">Difficile</button>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="ui-layer">
+            <div class="score-box">ROOT: <span id="score">0</span></div>
+        </div>
+
+        <div id="message-box"></div>
+    </div>
+
+    <div class="controls-hint">Utilisez les flèches du clavier pour guider Tux</div>
+
+    <div class="mobile-controls">
+        <div class="pad-btn" id="btn-up">▲</div>
+        <div class="d-pad-row">
+            <div class="pad-btn" id="btn-left">◀</div>
+            <div class="pad-btn" id="btn-down">▼</div>
+            <div class="pad-btn" id="btn-right">▶</div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * CONFIGURATION GLOBALE
+         */
+        const CANVAS = document.getElementById('gameCanvas');
+        const CTX = CANVAS.getContext('2d');
+        const SCORE_EL = document.getElementById('score');
+        const MSG_EL = document.getElementById('message-box');
+
+        const TILE_SIZE = 32;
+
+        // Variable de vitesse dynamique (maintenant modifiable)
+        let PACMAN_SPEED = 1;
+
+        // 1 = Mur, 0 = PC (Gomme), 2 = Vide, 3 = NIRD/NIRM (Abeille), 4 = Portail
+        const MAP_LAYOUT = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+            [4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 4],
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        ];
+
+        const ROWS = MAP_LAYOUT.length;
+        const COLS = MAP_LAYOUT[0].length;
+
+        // On garde la résolution interne fixe pour le dessin, c'est le CSS qui gère l'affichage
+        CANVAS.width = COLS * TILE_SIZE;
+        CANVAS.height = ROWS * TILE_SIZE;
+
+        let score = 0;
+        let isGameOver = false;
+        let isSuddenDeath = false;
+        let powerModeTimeout = null;
+        let animationId = null;
+
+        /**
+         * FONCTIONS DE GESTION DE LA DIFFICULTÉ
+         */
+        function setDifficulty(speed) {
+            PACMAN_SPEED = speed;
+            document.getElementById('btn-easy').classList.toggle('active', speed === 1);
+            document.getElementById('btn-hard').classList.toggle('active', speed === 2);
+            resetGame();
+            document.activeElement.blur();
+        }
+
+        /**
+         * DESSIN (TUX, WINDOWS, ETC.) - Code inchangé pour le dessin
+         */
+        function drawTux(ctx, x, y, size, rotation) {
+            const cx = x + size / 2;
+            const cy = y + size / 2;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rotation);
+            ctx.fillStyle = "#FF8800";
+            ctx.beginPath();
+            ctx.ellipse(-5, 12, 4, 3, 0, 0, Math.PI * 2); 
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(5, 12, 4, 3, 0, 0, Math.PI * 2); 
+            ctx.fill();
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.ellipse(0, 2, 11, 13, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.ellipse(0, 5, 7, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.ellipse(-10, 4, 3, 6, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(10, 4, 3, 6, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(-3, -4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(3, -4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(-2.5, -4, 1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(3.5, -4, 1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#FFAA00";
+            ctx.beginPath();
+            ctx.moveTo(-2, -1);
+            ctx.lineTo(2, -1);
+            ctx.lineTo(0, 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawWindowsLogo(ctx, x, y, size, isScared) {
+            const cx = x + size / 2;
+            const cy = y + size / 2;
+            const s = size / 2.5;
+            ctx.save();
+            ctx.translate(cx, cy);
+            if (isScared) {
+                ctx.fillStyle = "#0000AA";
+                ctx.fillRect(-size / 2 + 2, -size / 2 + 2, size - 4, size - 4);
+                ctx.fillStyle = "white";
+                ctx.font = "8px monospace";
+                ctx.fillText(": (", -4, 2);
+            } else {
+                ctx.fillStyle = "#F35325";
+                ctx.fillRect(-s - 1, -s - 1, s, s);
+                ctx.fillStyle = "#81BC06";
+                ctx.fillRect(1, -s - 1, s, s);
+                ctx.fillStyle = "#05A6F0";
+                ctx.fillRect(-s - 1, 1, s, s);
+                ctx.fillStyle = "#FFBA08";
+                ctx.fillRect(1, 1, s, s);
+            }
+            ctx.restore();
+        }
+
+        function drawComputer(ctx, x, y, size) {
+            const cx = x + size / 2;
+            const cy = y + size / 2;
+            ctx.fillStyle = "#888";
+            ctx.fillRect(cx - 8, cy - 6, 16, 10);
+            ctx.fillStyle = "#44F";
+            ctx.fillRect(cx - 6, cy - 4, 12, 6);
+            ctx.fillStyle = "#555";
+            ctx.fillRect(cx - 3, cy + 4, 6, 2);
+            ctx.fillRect(cx - 5, cy + 6, 10, 1);
+        }
+
+        function drawNirm(ctx, x, y, size) {
+            const cx = x + size / 2;
+            const cy = y + size / 2;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.strokeStyle = "#D946EF";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(2, -2);
+            ctx.quadraticCurveTo(10, -12, 14, -4);
+            ctx.quadraticCurveTo(10, 2, 2, -2);
+            ctx.stroke();
+            const grad = ctx.createLinearGradient(-4, 4, 6, 8);
+            grad.addColorStop(0, "#8B5CF6");
+            grad.addColorStop(0.5, "#F472B6");
+            grad.addColorStop(1, "#FBBF24");
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.ellipse(2, 6, 6, 4, -Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-1, 8);
+            ctx.lineTo(3, 4);
+            ctx.stroke();
+            ctx.fillStyle = "#2563EB";
+            ctx.beginPath();
+            ctx.arc(-4, -2, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#2563EB";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-5, -6);
+            ctx.quadraticCurveTo(-7, -10, -5, -12);
+            ctx.moveTo(-3, -6);
+            ctx.quadraticCurveTo(-1, -10, -3, -12);
+            ctx.stroke();
+            ctx.fillStyle = "#3B82F6";
+            ctx.fillRect(-10, 4, 2, 2);
+            ctx.fillRect(-8, 7, 2, 2);
+            ctx.fillRect(-12, 6, 1.5, 1.5);
+            ctx.restore();
+        }
+
+        /**
+         * FONCTIONS UTILITAIRES DE JEU
+         */
+        function placeRandomFruits(count, onEmptyTilesOnly = false) {
+            let possibleSpots = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const targetType = onEmptyTilesOnly ? 2 : 0;
+                    if (MAP_LAYOUT[r][c] === targetType) {
+                        possibleSpots.push({ r, c });
+                    }
+                }
+            }
+            possibleSpots.sort(() => Math.random() - 0.5);
+            let placed = 0;
+            for (let spot of possibleSpots) {
+                if (placed >= count) break;
+                MAP_LAYOUT[spot.r][spot.c] = 3;
+                placed++;
+            }
+        }
+
+        function countRemainingDots() {
+            let count = 0;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (MAP_LAYOUT[r][c] === 0) count++;
+                }
+            }
+            return count;
+        }
+
+        function activatePowerMode() {
+            ghosts.forEach(g => {
+                if (!g.isDead) g.isScared = true;
+            });
+            if (powerModeTimeout) clearTimeout(powerModeTimeout);
+            powerModeTimeout = setTimeout(() => {
+                ghosts.forEach(g => g.isScared = false);
+            }, 5000);
+        }
+
+        /**
+         * CLASSE PACMAN (TUX)
+         */
+        class Pacman {
+            constructor(startX, startY) {
+                this.x = startX;
+                this.y = startY;
+                this.startX = startX;
+                this.startY = startY;
+                this.vx = 0;
+                this.vy = 0;
+                this.nextVx = 0;
+                this.nextVy = 0;
+                this.rotation = 0;
+            }
+
+            reset() {
+                this.x = this.startX;
+                this.y = this.startY;
+                this.vx = 0;
+                this.vy = 0;
+                this.nextVx = 0;
+                this.nextVy = 0;
+                this.rotation = 0;
+            }
+
+            update() {
+                if (this.x < -TILE_SIZE / 2) this.x = CANVAS.width - TILE_SIZE / 2;
+                else if (this.x > CANVAS.width - TILE_SIZE / 2) this.x = -TILE_SIZE / 2;
+
+                if (this.x % TILE_SIZE === 0 && this.y % TILE_SIZE === 0) {
+                    if (this.nextVx !== 0 || this.nextVy !== 0) {
+                        if (!this.checkWallCollision(this.x + this.nextVx * TILE_SIZE, this.y + this.nextVy * TILE_SIZE)) {
+                            this.vx = this.nextVx;
+                            this.vy = this.nextVy;
+                            this.nextVx = 0;
+                            this.nextVy = 0;
+                            this.updateRotation();
+                        }
+                    }
+                    if (this.checkWallCollision(this.x + this.vx * TILE_SIZE, this.y + this.vy * TILE_SIZE)) {
+                        this.vx = 0;
+                        this.vy = 0;
+                    }
+                }
+                this.x += this.vx * PACMAN_SPEED;
+                this.y += this.vy * PACMAN_SPEED;
+                this.eatDot();
+            }
+
+            checkWallCollision(targetX, targetY) {
+                const gridX = Math.floor((targetX + TILE_SIZE / 2) / TILE_SIZE);
+                const gridY = Math.floor((targetY + TILE_SIZE / 2) / TILE_SIZE);
+                if (gridX < 0 || gridX >= COLS) return false;
+                if (gridY < 0 || gridY >= ROWS) return true;
+                return MAP_LAYOUT[gridY][gridX] === 1;
+            }
+
+            eatDot() {
+                const centerX = this.x + TILE_SIZE / 2;
+                const centerY = this.y + TILE_SIZE / 2;
+                const col = Math.floor(centerX / TILE_SIZE);
+                const row = Math.floor(centerY / TILE_SIZE);
+                if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
+                const tile = MAP_LAYOUT[row][col];
+                if (tile === 0) {
+                    MAP_LAYOUT[row][col] = 2;
+                    score += 10;
+                    SCORE_EL.innerText = score;
+                    const remaining = countRemainingDots();
+                    if (remaining === 0 && !isSuddenDeath) {
+                        isSuddenDeath = true;
+                        placeRandomFruits(5, true);
+                        MSG_EL.innerText = "CHASSE AUX WINDOWS !";
+                        MSG_EL.style.display = "block";
+                        setTimeout(() => MSG_EL.style.display = "none", 3000);
+                    }
+                } else if (tile === 3) {
+                    MAP_LAYOUT[row][col] = 2;
+                    score += 50;
+                    SCORE_EL.innerText = score;
+                    activatePowerMode();
+                }
+            }
+
+            updateRotation() {
+                if (this.vx === 1) this.rotation = 0;
+                if (this.vx === -1) this.rotation = Math.PI;
+                if (this.vx === 0 && this.vy !== 0) this.rotation = 0;
+            }
+
+            draw() {
+                drawTux(CTX, this.x, this.y, TILE_SIZE, this.rotation);
+            }
+        }
+
+        /**
+         * CLASSE FANTÔME
+         */
+        class Ghost {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.startX = x;
+                this.startY = y;
+                this.isScared = false;
+                this.isDead = false;
+                this.vx = 0;
+                this.vy = 0;
+                this.changeDirection();
+            }
+
+            reset() {
+                this.x = this.startX;
+                this.y = this.startY;
+                this.vx = 0;
+                this.vy = 0;
+                this.isScared = false;
+                this.isDead = false;
+                this.changeDirection();
+            }
+
+            update() {
+                if (this.isDead) return;
+                if (this.x < -TILE_SIZE / 2) this.x = CANVAS.width - TILE_SIZE / 2;
+                else if (this.x > CANVAS.width - TILE_SIZE / 2) this.x = -TILE_SIZE / 2;
+                if (this.x % TILE_SIZE === 0 && this.y % TILE_SIZE === 0) {
+                    const nextX = this.x + this.vx * TILE_SIZE;
+                    const nextY = this.y + this.vy * TILE_SIZE;
+                    if (this.checkWallCollision(nextX, nextY) || Math.random() < 0.2) {
+                        this.changeDirection();
+                    }
+                }
+                this.x += this.vx * PACMAN_SPEED;
+                this.y += this.vy * PACMAN_SPEED;
+            }
+
+            changeDirection() {
+                const directions = [{ vx: 0, vy: -1 }, { vx: 0, vy: 1 }, { vx: -1, vy: 0 }, { vx: 1, vy: 0 }];
+                directions.sort(() => Math.random() - 0.5);
+                for (let dir of directions) {
+                    if (!this.checkWallCollision(this.x + dir.vx * TILE_SIZE, this.y + dir.vy * TILE_SIZE)) {
+                        this.vx = dir.vx;
+                        this.vy = dir.vy;
+                        return;
+                    }
+                }
+            }
+
+            checkWallCollision(targetX, targetY) {
+                const gridX = Math.floor((targetX + TILE_SIZE / 2) / TILE_SIZE);
+                const gridY = Math.floor((targetY + TILE_SIZE / 2) / TILE_SIZE);
+                if (gridX < 0 || gridX >= COLS) return false;
+                if (gridY < 0 || gridY >= ROWS) return true;
+                return MAP_LAYOUT[gridY][gridX] === 1;
+            }
+
+            draw() {
+                if (this.isDead) return;
+                drawWindowsLogo(CTX, this.x, this.y, TILE_SIZE, this.isScared);
+            }
+        }
+
+        // INITIALISATION
+        let player;
+        let ghosts = [];
+
+        function initGame() {
+            player = new Pacman(1 * TILE_SIZE, 1 * TILE_SIZE);
+            ghosts = [
+                new Ghost(13 * TILE_SIZE, 1 * TILE_SIZE),
+                new Ghost(1 * TILE_SIZE, 13 * TILE_SIZE),
+                new Ghost(13 * TILE_SIZE, 13 * TILE_SIZE),
+                new Ghost(7 * TILE_SIZE, 7 * TILE_SIZE)
+            ];
+            placeRandomFruits(5);
+            gameLoop();
+        }
+
+        // GESTION CLAVIER
+        window.addEventListener('keydown', e => {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
+            if (isGameOver && e.key === "Enter") { resetGame(); return; }
+            if (!player) return;
+            switch (e.key) {
+                case 'ArrowUp': player.nextVx = 0; player.nextVy = -1; break;
+                case 'ArrowDown': player.nextVx = 0; player.nextVy = 1; break;
+                case 'ArrowLeft': player.nextVx = -1; player.nextVy = 0; break;
+                case 'ArrowRight': player.nextVx = 1; player.nextVy = 0; break;
+            }
+        });
+
+        // GESTION TACTILE (NOUVEAU)
+        function handleMobileInput(direction) {
+            if (isGameOver) { resetGame(); return; }
+            if (!player) return;
+            switch(direction) {
+                case 'up': player.nextVx = 0; player.nextVy = -1; break;
+                case 'down': player.nextVx = 0; player.nextVy = 1; break;
+                case 'left': player.nextVx = -1; player.nextVy = 0; break;
+                case 'right': player.nextVx = 1; player.nextVy = 0; break;
+            }
+        }
+
+        // Attache les événements aux boutons tactiles
+        // On utilise 'touchstart' pour une réponse immédiate
+        document.getElementById('btn-up').addEventListener('touchstart', (e) => { e.preventDefault(); handleMobileInput('up'); });
+        document.getElementById('btn-down').addEventListener('touchstart', (e) => { e.preventDefault(); handleMobileInput('down'); });
+        document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); handleMobileInput('left'); });
+        document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); handleMobileInput('right'); });
+        
+        // Support souris pour test sur PC
+        document.getElementById('btn-up').addEventListener('mousedown', (e) => { handleMobileInput('up'); });
+        document.getElementById('btn-down').addEventListener('mousedown', (e) => { handleMobileInput('down'); });
+        document.getElementById('btn-left').addEventListener('mousedown', (e) => { handleMobileInput('left'); });
+        document.getElementById('btn-right').addEventListener('mousedown', (e) => { handleMobileInput('right'); });
+
+
+        function resetGame() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            isGameOver = false;
+            isSuddenDeath = false;
+            score = 0;
+            SCORE_EL.innerText = "0";
+            MSG_EL.style.display = "none";
+            if (powerModeTimeout) clearTimeout(powerModeTimeout);
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (MAP_LAYOUT[r][c] === 2 || MAP_LAYOUT[r][c] === 3) MAP_LAYOUT[r][c] = 0;
+                }
+            }
+            placeRandomFruits(5);
+            player.reset();
+            ghosts.forEach(g => g.reset());
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function drawMap() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const type = MAP_LAYOUT[r][c];
+                    const x = c * TILE_SIZE;
+                    const y = r * TILE_SIZE;
+
+                    if (type === 1) {
+                        CTX.fillStyle = "#333";
+                        CTX.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                        CTX.strokeStyle = isSuddenDeath ? "#FF0000" : "#555";
+                        CTX.lineWidth = 2;
+                        CTX.strokeRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    } else if (type === 0) {
+                        drawComputer(CTX, x, y, TILE_SIZE);
+                    } else if (type === 3) {
+                        drawNirm(CTX, x, y, TILE_SIZE);
+                    }
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (isGameOver) return;
+            CTX.fillStyle = "#111";
+            CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+
+            drawMap();
+
+            if (player) {
+                player.update();
+                player.draw();
+            }
+
+            let activeGhosts = 0;
+            if (ghosts.length > 0) {
+                for (const ghost of ghosts) {
+                    if (ghost.isDead) continue;
+                    activeGhosts++;
+                    ghost.update();
+                    ghost.draw();
+
+                    const dx = player.x - ghost.x;
+                    const dy = player.y - ghost.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < TILE_SIZE / 1.5) {
+                        if (ghost.isScared) {
+                            score += 200;
+                            SCORE_EL.innerText = score;
+                            if (isSuddenDeath) {
+                                ghost.isDead = true;
+                                CTX.fillStyle = "white";
+                                CTX.font = "14px monospace";
+                                CTX.fillText("BSOD", ghost.x, ghost.y);
+                            } else {
+                                ghost.reset();
+                            }
+                        } else {
+                            isGameOver = true;
+                            CTX.fillStyle = "rgba(0,0,0,0.9)";
+                            CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+                            CTX.fillStyle = "red";
+                            // Texte responsive
+                            let fontSize = CANVAS.width < 400 ? 30 : 40;
+                            CTX.font = fontSize + "px Courier New";
+                            CTX.textAlign = "center";
+                            CTX.fillText("KERNEL PANIC!", CANVAS.width / 2, CANVAS.height / 2);
+                            CTX.fillStyle = "white";
+                            CTX.font = (fontSize/2) + "px Courier New";
+                            CTX.fillText("Touchez pour reboot", CANVAS.width / 2, CANVAS.height / 2 + 40);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            if (isSuddenDeath && activeGhosts === 0) {
+                isGameOver = true;
+                CTX.fillStyle = "rgba(0,0,0,0.9)";
+                CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+                CTX.fillStyle = "#00FF00";
+                CTX.font = "30px Courier New";
+                CTX.textAlign = "center";
+                CTX.fillText("SYSTEM SECURE", CANVAS.width / 2, CANVAS.height / 2);
+                CTX.fillStyle = "white";
+                CTX.font = "16px Courier New";
+                CTX.fillText("Uptime: " + score, CANVAS.width / 2, CANVAS.height / 2 + 40);
+                CTX.fillText("Touchez pour rejouer", CANVAS.width / 2, CANVAS.height / 2 + 80);
+                return;
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // Ajout d'un écouteur sur le canvas pour redémarrer le jeu au clic/toucher quand c'est fini
+        CANVAS.addEventListener('touchstart', (e) => {
+            if(isGameOver) {
+                e.preventDefault();
+                resetGame();
+            }
+        });
+        CANVAS.addEventListener('mousedown', () => {
+            if(isGameOver) resetGame();
+        });
+
+        initGame();
+
+    </script>
+</body>
+
+</html>

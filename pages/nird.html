@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NIRD</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+
+  <body>
+    <header>
+      <div class="nav-container">
+        <nav>
+          <a href="../index.html" class="logo-link">
+            <img src="../img/nird.png" alt="Logo NIRD" class="Logo" />
+          </a>
+          <ul>
+            <li><a href="../index.html">Accueil</a></li>
+            <li><a href="jeux.html">Jeux</a></li>
+            <li><a href="form.html">Form</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div>
+          <h2>Qu'est ce que la demarche NIRD ?</h2>
+          <br />
+          <h2>Nous essaieront de vous l'expliquer en plusieurs points:</h2>
+          <p>
+            Une vision éthique du numérique éducatif Né de la collaboration
+            d'enseignants passionnés sur la Forge des communs numériques, le
+            projet NIRD (Numérique Inclusif, Responsable et Durable) propose une
+            alternative concrète à la consommation numérique actuelle. Loin
+            d'être une simple solution technique, c'est une philosophie qui vise
+            à redonner aux établissements scolaires et aux collectivités la
+            maîtrise de leurs outils, en plaçant l'éthique et l'humain au centre
+            des usages technologiques.
+          </p>
+          <br/>
+          <p>
+            Lutter contre l'obsolescence programmée Le premier axe de la
+            démarche est écologique. Au lieu de jeter des ordinateurs jugés
+            "trop vieux" par les standards des systèmes propriétaires (comme
+            Windows ou macOS), NIRD encourage le réemploi du matériel existant.
+            Grâce à l'installation de systèmes d'exploitation libres et légers
+            (basés sur Linux), il devient possible de prolonger la durée de vie
+            des parcs informatiques de plusieurs années, réduisant ainsi
+            drastiquement les déchets électroniques (DEEE) et l'empreinte
+            carbone des établissements.
+          </p>
+          <br/>
+          <p>
+            Souveraineté et protection des données Au-delà du matériel, NIRD
+            défend une indépendance logicielle. En privilégiant les logiciels
+            libres et Open Source, la démarche libère les utilisateurs des
+            licences coûteuses et de l'enfermement propriétaire. Cette approche
+            garantit une meilleure protection des données personnelles des
+            élèves et des enseignants (conformité RGPD), en évitant la captation
+            d'informations souvent pratiquée par les géants du web. C'est le
+            choix d'un numérique souverain, transparent et auditable.
+          </p>
+          <br/>
+          <p>
+            Des possibilités pédagogiques étendues Concrètement, adopter NIRD
+            ouvre de nombreuses portes : création de "Kiosques" pour des usages
+            spécifiques, mise en place de réseaux scolaires sécurisés, ou encore
+            sensibilisation des élèves à la culture du libre et au codage. C'est
+            aussi une communauté de partage où documentation, scripts et astuces
+            sont mis en commun pour permettre à chaque acteur de l'éducation de
+            construire un environnement numérique adapté, performant et
+            respectueux de la planète.
+          </p>
+        </div>
+      </section>
+    </main>
+<script>
+        let secretCode = "cdsnake";
+        let inputBuffer = "";
+
+        document.addEventListener('keydown', (e) => {
+            // On ignore les touches comme majuscule, ctrl, etc. pour ne pas polluer le code
+            if (e.key.length === 1) {
+                inputBuffer += e.key.toLowerCase();
+            }
+
+            // Pour le débug : Affiche ce que tu tapes dans la console (F12)
+            console.log("Buffer actuel : " + inputBuffer);
+
+            // On garde seulement les derniers caractères de la longueur du code
+            if (inputBuffer.length > secretCode.length) {
+                inputBuffer = inputBuffer.slice(-secretCode.length);
+            }
+
+            if (inputBuffer === secretCode) {
+                // CORRECTION ICI : Utilisation de \n pour le saut de ligne
+                alert("🐍 Mode Hacker Activé : Lancement du Snake !");
+                
+                // Vérifiez bien que le fichier snake.html est au bon endroit !
+                // Si ce fichier (nird.html) est dans le même dossier que snake.html, enlevez le "../pages/"
+                window.location.href = "../pages/snake.html"; 
+            }
+        });
+    </script>
+    <footer>
+      <div class="footer-container">
+        <a href="#">Mentions légales</a>
+        <div class="footer-icons"></div>
+      </div>
+    </footer>
+  </body>
+</html>
